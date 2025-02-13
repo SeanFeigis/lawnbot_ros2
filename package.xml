@@ -3,7 +3,7 @@
 <package format="3">
   <name>lawnbot_ros2</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>lawnbot ros2 package</description>
   <maintainer email="sfeigis@todo.todo">sfeigis</maintainer>
   <license>Apache-2.0</license>
 
