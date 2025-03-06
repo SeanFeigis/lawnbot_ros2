@@ -22,6 +22,9 @@ def setup_serial():
     start_command = "1,start"
     response = send_command(ser, start_command)
     print(f"Response: {response}")
+    start_command = "2,start"
+    response = send_command(ser, start_command)
+    print(f"Response: {response}")
     
     return ser
 
@@ -42,6 +45,8 @@ class PositionSubscriber(Node):
         command = f'1,P{position}'
         response = send_command(self.ser, command)
         print(f"Response: {response}")
+        command = f'2,P{position}'
+        response = send_command(self.ser, command)
         self.get_logger().info('I heard: "%s"' % msg.data)
 
 def main(args=None):
