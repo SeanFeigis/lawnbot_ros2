@@ -23,13 +23,11 @@ def setup_serial():
     time.sleep(2)  # Wait for the serial connection to establish
     print("Connected to Kangaroo on /dev/ttyUSB0")
     
-    # Start command must be sent first
-    start_command = "1,start"
-    response = send_command(ser, start_command)
-    print(f"Response: {response}")
-    start_command = "2,start"
-    response = send_command(ser, start_command)
-    print(f"Response: {response}")
+    # Send start commands to initialize the motor controller
+    start_commands = ["D,start", "T,start", "D,p0", "T,p0"]
+    for command in start_commands:
+        response = send_command(ser, command)
+        print(f"Response for '{command}': {response}")
     
     return ser
 
@@ -64,7 +62,7 @@ class MotorController(Node):
             
     def listener_callback(self, msg):
         MotorData = msg.data
-        command = f'{MotorData.op_code},P{MotorData.position},S{MotorData.speed}'
+        command = f'{MotorData.op_code},PI{MotorData.position},S{MotorData.speed}'
         
         response = send_command(self.ser, command)
         print(f"Response: {response}")

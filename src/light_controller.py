@@ -5,13 +5,6 @@ from rclpy.node import Node
 
 from std_srvs.srv import Trigger
 
-def send_command(ser, command):
-    """Send a command to the Kangaroo motor controller."""
-    ser.write(command.encode('utf-8') + b'\r')  # Kangaroo commands end with a carriage return
-    time.sleep(0.1)
-    response = ser.read(ser.in_waiting).decode('utf-8')
-    return response
-
 class LightController(Node):
 
     def __init__(self):
