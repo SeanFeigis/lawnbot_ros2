@@ -4,6 +4,11 @@ import time
 from rclpy.node import Node
 
 from std_msgs.msg import String
+from custom_message.msg import MotorData
+from std_msgs.msg import Bool
+
+
+GETPOS_COMMAND = "D,getp"
 
 def send_command(ser, command):
     """Send a command to the Kangaroo motor controller."""
@@ -28,10 +33,10 @@ def setup_serial():
     
     return ser
 
-class PositionSubscriber(Node):
+class MotorController(Node):
 
     def __init__(self):
-        super().__init__('position_subscriber')
+        super().__init__('motor_controller')
         self.subscription = self.create_subscription(
             String,
             'topic',
@@ -40,26 +45,44 @@ class PositionSubscriber(Node):
         self.subscription  # prevent unused variable warning
         self.ser = setup_serial()
         
+        self.motion_complete_publisher_ = self.create_publisher(Bool, 'motion_completed', 10)
+        timer_period = 1.0  # seconds
+        self.timer = self.create_timer(timer_period, self.publish_completion_status_timer_callback)
+            
+    def get_completion_status(self):
+        command = GETPOS_COMMAND
+        response = send_command(self.ser, command)
+        return 'P' in response  
+            
+    def publish_completion_status_timer_callback(self):
+        msg = Bool()
+        
+        msg.data = self.get_completion_status()
+
+        self.motion_completed_publisher_.publish(msg)
+        self.get_logger().info('Publishing: "%b"' % msg.data)
+            
     def listener_callback(self, msg):
-        position = msg.data
-        command = f'1,P{position}'
+        MotorData = msg.data
+        command = f'{MotorData.op_code},P{MotorData.position},S{MotorData.speed}'
+        
         response = send_command(self.ser, command)
         print(f"Response: {response}")
-        command = f'2,P{position}'
-        response = send_command(self.ser, command)
-        self.get_logger().info('I heard: "%s"' % msg.data)
+        
+        self.get_logger().info('I heard: "%s"' % String(msg))
+
 
 def main(args=None):
     rclpy.init(args=args)
 
-    position_subscriber = PositionSubscriber()
+    motor_controller = MotorController()
 
-    rclpy.spin(position_subscriber)
+    rclpy.spin(motor_controller)
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
-    position_subscriber.destroy_node()
+    motor_controller.destroy_node()
     rclpy.shutdown()
 
 
