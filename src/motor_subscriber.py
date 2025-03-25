@@ -14,7 +14,7 @@ def send_command(ser, command):
 
 def setup_serial():
     """Set up the serial connection and send the start command."""
-    ser = serial.Serial('/dev/ttyAMA1', 9600, timeout=1)
+    ser = serial.Serial('/dev/ttyAMA0', 9600, timeout=1)
     time.sleep(2)  # Wait for the serial connection to establish
     print("Connected to Kangaroo on /dev/ttyUSB0")
     

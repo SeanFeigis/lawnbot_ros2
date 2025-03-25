@@ -12,7 +12,7 @@ from custom_message.msg import MotorData
 motor_data_array = [
         MotorData(op_code='D', position=6000, speed=500),
         MotorData(op_code='T', position=1800, speed=500),
-        MotorData(op_code='D', position=1500, speed=500),
+        MotorData(op_code='D', position=2500, speed=500),
         MotorData(op_code='T', position=1800, speed=500),
         
     ]
@@ -23,7 +23,7 @@ class PathPublisher(Node):
 
     def __init__(self):
         super().__init__('path_publisher')
-        self.publisher_ = self.create_publisher(String, 'path', 10)
+        self.publisher_ = self.create_publisher(MotorData, 'path', 10)
         timer_period = 1.0  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         
