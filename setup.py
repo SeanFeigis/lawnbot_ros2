@@ -26,8 +26,10 @@ setup(
             'main = src.main_logic_controller:main',
             'motor = src.motor_controller:main',
             'path = src.path_publisher:main',
-            'light_controller = src.light_controller:main',
-            'pump_controller = src.pump_controller:main',
+            'light = src.light_controller:main',
+            'pump = src.pump_controller:main',
+            'picamera = src.picamera_controller:main',
+            'object_detector = src.object_detector:main',
         ],
     },
 )

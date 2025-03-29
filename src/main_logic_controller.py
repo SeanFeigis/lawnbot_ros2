@@ -5,7 +5,10 @@ from rclpy.node import Node
 
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
-from custom_message.msg import MotorData
+from custom_message.msg import MotorData, BoundingBox
+
+Y_MIDPOINT =  1296
+Y_RANGE = 200
 
 class MainLogicController(Node):
 
@@ -20,9 +23,9 @@ class MainLogicController(Node):
         
         ### bounding box Subscriber
         self.bound_box_subscription = self.create_subscription(
-            String,
+            BoundingBox,
             'bound_box',
-            self.path_callback,
+            self.dandelion_detected_callback,
             10)
         
         self.current_path = None
@@ -30,7 +33,12 @@ class MainLogicController(Node):
         ### Pump Client
         self.pump_client = self.create_client(Trigger, 'pump_trigger_service')
         while not self.pump_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('service not available, waiting again...')
+            self.get_logger().info('pump service not available, waiting again...')
+            
+        ### Light Client
+        self.light_client = self.create_client(Trigger, 'light_trigger_service')
+        while not self.light_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('light service not available, waiting again...')
             
             
         ### Motor Output Publisher 
@@ -41,10 +49,28 @@ class MainLogicController(Node):
         self.path_subscription  # prevent unused variable warning
         self.bound_box_subscription
         
+        self.setup()
+        
+    def setup(self):
+        self.send_light_request()
+        
+    def send_light_request(self):
+        request = Trigger.Request()
+        future = self.light_client.call_async(request)
+        future.add_done_callback(self.light_callback)
+    ### Light Service Send Trigger Request
+    def light_callback(self, future):
+        response = future.result()
+        if response.success:
+            self.get_logger().info(f'Service response: {response.message}')
+        else:
+            self.get_logger().info('Service call failed')    
+        
+        
     ### Pump Service Send Trigger Request    
     def send_pump_request(self):
         request = Trigger.Request()
-        future = self.client.call_async(request)
+        future = self.pump_client.call_async(request)
         future.add_done_callback(self.pump_callback)
         
     ### Pump Service Callback
@@ -65,8 +91,16 @@ class MainLogicController(Node):
         self.motor_output_publisher_.publish(msg)
         self.get_logger().info('Publishing: "%s"' % str(msg))
         
-    
-
+        
+    def dandelion_detected_callback(self, msg):
+        self.get_logger().info('Dandelion detected: "%s"' % msg.data)
+        y_midpoint = msg.center_y
+        
+        if (Y_MIDPOINT - Y_RANGE) <= y_midpoint <= (Y_MIDPOINT + Y_RANGE):
+            self.get_logger().info('Dandelion is within range')
+            # Trigger the pump
+            self.send_pump_request()
+        
 
 def main(args=None):
     rclpy.init(args=args)
@@ -74,7 +108,6 @@ def main(args=None):
     main_logic_controller = MainLogicController()
 
     rclpy.spin(main_logic_controller)
-
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)

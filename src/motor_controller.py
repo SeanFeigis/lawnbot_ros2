@@ -8,7 +8,8 @@ from custom_message.msg import MotorData
 from std_msgs.msg import Bool
 
 
-GETPOS_COMMAND = "D,getp"
+GETPOS_COMMAND_DRIVE = "D,getp"
+GETPOS_COMMAND_TURN = "T,getp"
 
 def send_command(ser, command):
     """Send a command to the Kangaroo motor controller."""
@@ -19,7 +20,7 @@ def send_command(ser, command):
 
 def setup_serial():
     """Set up the serial connection and send the start command."""
-    ser = serial.Serial('/dev/ttyAMA1', 9600, timeout=1)
+    ser = serial.Serial('/dev/ttyAMA0', 9600, timeout=1)
     time.sleep(2)  # Wait for the serial connection to establish
     print("Connected to Kangaroo on /dev/ttyUSB0")
     
@@ -31,14 +32,16 @@ def setup_serial():
     
     return ser
 
+
+
 class MotorController(Node):
 
     def __init__(self):
         super().__init__('motor_controller')
         self.subscription = self.create_subscription(
-            String,
-            'topic',
-            self.listener_callback,
+            MotorData,
+            'motor_output',
+            self.motor_output_callback,
             10)
         self.subscription  # prevent unused variable warning
         self.ser = setup_serial()
@@ -48,40 +51,51 @@ class MotorController(Node):
         self.timer = self.create_timer(timer_period, self.publish_completion_status_timer_callback)
             
     def get_completion_status(self):
-        command = GETPOS_COMMAND
-        response = send_command(self.ser, command)
-        return 'P' in response  
+        """Get the completion status of the motor."""
+        response_drive = send_command(self.ser, GETPOS_COMMAND_DRIVE)
+        
+        response_turn = send_command(self.ser, GETPOS_COMMAND_TURN)
+        return 'P' in response_drive and 'P' in response_turn
             
     def publish_completion_status_timer_callback(self):
         msg = Bool()
         
         msg.data = self.get_completion_status()
 
-        self.motion_completed_publisher_.publish(msg)
-        self.get_logger().info('Publishing: "%b"' % msg.data)
+        self.motion_complete_publisher_.publish(msg)
+        self.get_logger().debug('Publishing: "%s"' % str(msg.data))
             
-    def listener_callback(self, msg):
-        MotorData = msg.data
-        command = f'{MotorData.op_code},PI{MotorData.position},S{MotorData.speed}'
+    def motor_output_callback(self, msg):
+        MotorData = msg
+        command = f'{MotorData.op_code},PI{MotorData.position}S{MotorData.speed}'
         
+        self.get_logger().info(f'Sending to Serial: {command}')
         response = send_command(self.ser, command)
         print(f"Response: {response}")
         
-        self.get_logger().info('I heard: "%s"' % String(msg))
+        
+        
+    def stop_and_shutdown(self):
+        send_command(self.ser, "D,S0")
+        send_command(self.ser, "T,S0")
+        self.ser.close()
+        self.get_logger().info('Stopping and closing serial connection')
 
 
 def main(args=None):
     rclpy.init(args=args)
 
     motor_controller = MotorController()
-
-    rclpy.spin(motor_controller)
-
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
-    motor_controller.destroy_node()
-    rclpy.shutdown()
+    
+    try:
+        rclpy.spin(motor_controller)
+    except KeyboardInterrupt:
+        # Handle the Ctrl+C (SIGINT) gracefully
+        motor_controller.get_logger().info("Caught Ctrl+C, shutting down motor controller.")
+        motor_controller.stop_and_shutdown()
+    finally:
+        motor_controller.destroy_node()
+        rclpy.shutdown()
 
 
 if __name__ == '__main__':
