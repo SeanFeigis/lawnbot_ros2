@@ -81,7 +81,6 @@ class MotorController(Node):
         self.ser.close()
         self.get_logger().info('Stopping and closing serial connection')
 
-
 def main(args=None):
     rclpy.init(args=args)
 
