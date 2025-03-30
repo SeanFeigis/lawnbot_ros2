@@ -7,8 +7,8 @@ from std_msgs.msg import String
 from std_srvs.srv import Trigger
 from custom_message.msg import MotorData, BoundingBox
 
-Y_MIDPOINT =  1296
-Y_RANGE = 200
+Y_MIDPOINT =  500
+Y_RANGE = 50
 
 class MainLogicController(Node):
 
@@ -43,8 +43,6 @@ class MainLogicController(Node):
             
         ### Motor Output Publisher 
         self.motor_output_publisher_ = self.create_publisher(MotorData, 'motor_output', 10)
-        timer_period = 1.0  # seconds
-        #self.motor_controller_timer = self.create_timer(timer_period, self.motor_controller_callback)
         
         self.path_subscription  # prevent unused variable warning
         self.bound_box_subscription
@@ -55,49 +53,57 @@ class MainLogicController(Node):
         self.send_light_request()
         
     def send_light_request(self):
+        """ Send a request to the light service to turn on the light. """
         request = Trigger.Request()
         future = self.light_client.call_async(request)
         future.add_done_callback(self.light_callback)
+        
     ### Light Service Send Trigger Request
     def light_callback(self, future):
+        """ Callback for the light service request."""
         response = future.result()
         if response.success:
-            self.get_logger().info(f'Service response: {response.message}')
+            self.get_logger().debug(f'Light Service response: {response.message}')
         else:
-            self.get_logger().info('Service call failed')    
+            self.get_logger().debug('Light Service call failed')    
         
         
     ### Pump Service Send Trigger Request    
     def send_pump_request(self):
+        """ Send a request to the pump service to turn on the pump. """
         request = Trigger.Request()
         future = self.pump_client.call_async(request)
         future.add_done_callback(self.pump_callback)
         
     ### Pump Service Callback
     def pump_callback(self, future):
+        """ Callback for the pump service request."""
         response = future.result()
         if response.success:
-            self.get_logger().info(f'Service response: {response.message}')
+            self.get_logger().info(f'Pump Service response: {response.message}')
         else:
-            self.get_logger().info('Service call failed')
+            self.get_logger().info('Pump Service call failed')
 
     ### Path Subscriber Handler
     def path_callback(self, msg):
+        """Forward the path subscriber data to the motor controller."""
         self.motor_controller_callback(msg)
 
     ### Motor Controller Publisher Handler
     def motor_controller_callback(self, msg):
+        """ Publish the motor data to the motor_output topic"""
         self.current_path = msg
         self.motor_output_publisher_.publish(msg)
         self.get_logger().info('Publishing: "%s"' % str(msg))
         
         
     def dandelion_detected_callback(self, msg):
-        self.get_logger().info('Dandelion detected: "%s"' % msg.data)
+        """Callback function for the bounding box subscriber."""
+        self.get_logger().debug('Dandelion detected')
         y_midpoint = msg.center_y
         
         if (Y_MIDPOINT - Y_RANGE) <= y_midpoint <= (Y_MIDPOINT + Y_RANGE):
-            self.get_logger().info('Dandelion is within range')
+            self.get_logger().info(f'Dandelion is within range at: {y_midpoint}')
             # Trigger the pump
             self.send_pump_request()
         
@@ -106,7 +112,6 @@ def main(args=None):
     rclpy.init(args=args)
 
     main_logic_controller = MainLogicController()
-
     rclpy.spin(main_logic_controller)
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically

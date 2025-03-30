@@ -29,7 +29,7 @@ setup(
             'light = src.light_controller:main',
             'pump = src.pump_controller:main',
             'picamera = src.picamera_controller:main',
-            'object_detector = src.object_detector:main',
+            'object_detector = src.object_detector:main'
         ],
     },
 )

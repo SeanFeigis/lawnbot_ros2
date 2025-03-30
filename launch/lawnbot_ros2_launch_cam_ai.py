@@ -37,8 +37,8 @@ def generate_launch_description():
     
     picamera_controller = launch_ros.actions.Node(
         package='lawnbot_ros2',
-        executable='picamera_controller',
-        name='picamera_controller'
+        executable='picamera',
+        name='picamera'
     )
     object_detector = launch_ros.actions.Node(
         package='lawnbot_ros2',

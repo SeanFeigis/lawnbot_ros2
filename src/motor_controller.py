@@ -11,6 +11,8 @@ from std_msgs.msg import Bool
 GETPOS_COMMAND_DRIVE = "D,getp"
 GETPOS_COMMAND_TURN = "T,getp"
 
+GET_COMPLETED_ACTION_TIMER_PERIOD=0.1 # seconds
+
 def send_command(ser, command):
     """Send a command to the Kangaroo motor controller."""
     ser.write(command.encode('utf-8') + b'\r')  # Kangaroo commands end with a carriage return
@@ -32,8 +34,6 @@ def setup_serial():
     
     return ser
 
-
-
 class MotorController(Node):
 
     def __init__(self):
@@ -47,8 +47,7 @@ class MotorController(Node):
         self.ser = setup_serial()
         
         self.motion_complete_publisher_ = self.create_publisher(Bool, 'motion_completed', 10)
-        timer_period = 1.0  # seconds
-        self.timer = self.create_timer(timer_period, self.publish_completion_status_timer_callback)
+        self.timer = self.create_timer(GET_COMPLETED_ACTION_TIMER_PERIOD, self.publish_completion_status_timer_callback)
             
     def get_completion_status(self):
         """Get the completion status of the motor."""

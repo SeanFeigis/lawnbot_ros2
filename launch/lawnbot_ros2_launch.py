@@ -81,12 +81,12 @@ def generate_launch_description():
     )
 
     return launch.LaunchDescription([
-        main_logic_controller,
+        object_detector,
+        picamera_controller,
         motor_controller,
         path_publisher,
         light_controller,
         pump_controller,
-        picamera_controller,
-        object_detector,
+        main_logic_controller,
         handle_sigint
     ])

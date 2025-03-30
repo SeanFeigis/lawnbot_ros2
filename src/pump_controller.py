@@ -51,7 +51,7 @@ class PumpController(Node):
         self.turn_off_pump()
         
         # Stop the timer
-        self.pump_shutoff_timer.stop()
+        self.pump_shutoff_timer.cancel()
         
         
     def close_gpio(self):

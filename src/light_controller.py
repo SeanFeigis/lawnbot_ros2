@@ -24,6 +24,7 @@ class LightController(Node):
         self.h = open_gpio()
 
     def trigger_callback(self, request, response):
+        """Service callback to trigger the light."""
         # This callback is triggered when the client calls the service
         self.get_logger().info('Light Trigger service called')
         
@@ -31,14 +32,16 @@ class LightController(Node):
         self.turn_on_light()
         
         response.success = True
-        response.message = "Action triggered successfully"
+        response.message = "Light Action triggered successfully"
         return response
     
     def turn_on_light(self):
+        """Turn on the light by writing to the GPIO pin."""
         lgpio.gpio_write(self.h, LIGHT_GPIO, ON)
         self.get_logger().info('Light turned ON')
         
     def turn_off_light(self):
+        """Turn off the light by writing to the GPIO pin."""
         lgpio.gpio_write(self.h, LIGHT_GPIO, OFF)
         self.get_logger().info('Light turned OFF')
         
