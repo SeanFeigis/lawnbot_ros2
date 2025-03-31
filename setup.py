@@ -14,7 +14,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*'))),
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'rclpy', 'std_msgs', 'sensor_msgs', 'cv_bridge', 'custom_message'],
     zip_safe=True,
     maintainer='Sean Feigis',
     maintainer_email='sfeigis@yahoo.com',

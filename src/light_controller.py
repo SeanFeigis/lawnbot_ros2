@@ -22,14 +22,20 @@ class LightController(Node):
         self.srv = self.create_service(Trigger, 'light_trigger_service', self.trigger_callback)
         self.get_logger().info('Trigger service server is ready')
         self.h = open_gpio()
+        self.light_state = False
 
     def trigger_callback(self, request, response):
         """Service callback to trigger the light."""
         # This callback is triggered when the client calls the service
         self.get_logger().info('Light Trigger service called')
         
-        ### Logic for triggering GPIO of light
-        self.turn_on_light()
+        ### Logic for toggling the light
+        if self.light_state:
+            self.turn_off_light()
+        else:
+            self.turn_on_light()
+            
+        self.light_state = not self.light_state
         
         response.success = True
         response.message = "Light Action triggered successfully"
