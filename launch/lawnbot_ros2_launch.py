@@ -72,6 +72,11 @@ def generate_launch_description():
         executable='object_detector',
         name='object_detector'
     )
+    vid_streamer = launch_ros.actions.Node(
+        package='lawnbot_ros2',
+        executable='vid_streamer',
+        name='vid_streamer'
+    )
 
     # Handle Ctrl+C (SIGINT) for graceful shutdown
     handle_sigint = RegisterEventHandler(
@@ -88,5 +93,6 @@ def generate_launch_description():
         light_controller,
         pump_controller,
         main_logic_controller,
+        vid_streamer,
         handle_sigint
     ])

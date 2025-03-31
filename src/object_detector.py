@@ -46,6 +46,8 @@ class ObjectDetector(Node):
             'bound_box',
             10
         )
+
+        self.vid_publisher = self.create_publisher(Image, 'image_annotated', 2)
         
         self.get_logger().info('Object Detector Node Started')
         
@@ -91,8 +93,7 @@ class ObjectDetector(Node):
                     
                     #self.get_logger().info(f'Publishing: {str(bbox)}')
                     self.publisher.publish(bbox)
-                    
-                    
+                self.vid_publisher.publish(self.bridge.cv2_to_imgmsg(result.plot(), encoding='rgb8'))  
         except Exception as e:
             self.get_logger().error(f'Failed to predict model: {e}')
 
