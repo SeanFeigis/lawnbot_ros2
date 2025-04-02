@@ -15,8 +15,8 @@ import time
 #     self.get_logger().info('Object Detector Node Started')
 #     return model
 
-MODEL_LOCATION="/home/lawnbot/ROS2/src/lawnbot_ros2/model/best_480_full_integer_quant_edgetpu.tflite"
-MODEL_SIZE = 640
+MODEL_LOCATION="/home/lawnbot/ROS2/src/lawnbot_ros2/model/best_320_full_integer_quant_edgetpu.tflite"
+MODEL_SIZE = 320
 
 class ObjectDetector(Node):
     def __init__(self):
@@ -54,7 +54,7 @@ class ObjectDetector(Node):
     def test_readiness(self):
         while True:
             dummy_image = np.zeros((640, 640, 3))
-            self.model.predict(dummy_image, imgsz=480)
+            self.model.predict(dummy_image, imgsz=MODEL_SIZE)
             self.get_logger().info("Model is ready for detection.")
             break
         
@@ -74,7 +74,7 @@ class ObjectDetector(Node):
             #if not hasattr(self, 'last_prediction_time'):
                 #self.last_prediction_time = time.time()
                 
-            results = self.model.predict(cv_image, imgsz=480)
+            results = self.model.predict(cv_image, imgsz=MODEL_SIZE)
             
             ###Uncomment for model rate testing
             #start_time = time.time()

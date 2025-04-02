@@ -19,9 +19,13 @@ def setup_camera():
     """Set up the camera to publish images for the model"""
     picam2 = Picamera2()
     config = picam2.create_still_configuration(main={"format": "RGB888"})
-    picam2.configure(config)    
+    picam2.configure(config)
     picam2.start()
     sleep(1) # Allow the camera to warm up
+    
+    with picam2.controls as ctrl:
+        # ctrl.AnalogueGain = 6.0
+        ctrl.ExposureTime = 5000
     
     return picam2
 

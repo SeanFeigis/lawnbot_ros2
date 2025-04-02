@@ -50,7 +50,7 @@ class SensorFactory(GstRtspServer.RTSPMediaFactory):
     def __init__(self, **properties):
         super(SensorFactory, self).__init__(**properties)
         self.number_frames = 0
-        self.fps = 15
+        self.fps = 20
         self.duration = 1 / self.fps * Gst.SECOND  # duration of a frame in nanoseconds
         # self.launch_string = 'appsrc name=source is-live=true block=true format=GST_FORMAT_TIME ' \
         #                      'caps=video/x-raw,format=BGR,width={},height={},framerate={}/1 ' \
@@ -60,11 +60,12 @@ class SensorFactory(GstRtspServer.RTSPMediaFactory):
         #                      .format(1920, 1080, self.fps)
                                 #  '! vp9enc ' \
                                 #  '! rtpvp9pay' \
-        self.launch_string = 'appsrc name=source is-live=true format=GST_FORMAT_TIME ' \
-                             'caps=video/x-raw,format=BGR,width={},height={} ' \
+        self.launch_string = 'appsrc name=source is-live=true block=true format=GST_FORMAT_TIME ' \
+                             'caps=video/x-raw,format=BGR,width={},height={},framerate={}/1 ' \
                              '! videoconvert ' \
-                             '! openh264enc ' \
-                             '! rtph264pay config-interval=1 name=pay0 pt=96' \
+                             '! video/x-raw,format=I420 ' \
+                             '! jpegenc ' \
+                             '! rtpjpegpay name=pay0 pt=96' \
                             .format(1280, 720, self.fps)
     # method to capture the video feed from the camera and push it to the
     # streaming buffer.
