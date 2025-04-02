@@ -3,7 +3,7 @@ import serial
 import time
 from rclpy.node import Node
 
-from std_msgs.msg import String
+from std_srvs.srv import Empty
 from custom_message.msg import MotorData
 from std_msgs.msg import Bool
 
@@ -47,7 +47,10 @@ class MotorController(Node):
         self.ser = setup_serial()
         
         self.motion_complete_publisher_ = self.create_publisher(Bool, 'motion_completed', 10)
-        self.timer = self.create_timer(GET_COMPLETED_ACTION_TIMER_PERIOD, self.publish_completion_status_timer_callback)
+        self.timer = self.create_timer(GET_COMPLETED_ACTION_TIMER_PERIOD, self.publish_completion_status_timer_callback, autostart = False)
+        
+        self.start_service = self.create_service(Empty, 'motor_start', self.start_motor_callback)
+        self.start_service = self.create_service(Empty, 'motor_stop', self.stop_motor_callback)
             
     def get_completion_status(self):
         """Get the completion status of the motor."""
@@ -72,13 +75,33 @@ class MotorController(Node):
         response = send_command(self.ser, command)
         print(f"Response: {response}")
         
-        
-        
-    def stop_and_shutdown(self):
+    
+    def stop(self):
+        """Stop the motors."""
         send_command(self.ser, "D,S0")
         send_command(self.ser, "T,S0")
+        self.get_logger().info('Stopping motors')
+        
+    def stop_and_shutdown(self):
+        self.stop()
         self.ser.close()
         self.get_logger().info('Stopping and closing serial connection')
+        
+        
+    def stop_motor_callback(self, request, response):
+        self.stop()
+        self.timer.cancel()
+        msg = Bool()
+        msg.data = False
+        self.motion_complete_publisher_.publish(msg)
+        response = Empty.Response()
+        return response
+        
+    def start_motor_callback(self, request, response):
+        self.timer.reset()
+        response = Empty.Response()
+        return response
+        
 
 def main(args=None):
     rclpy.init(args=args)

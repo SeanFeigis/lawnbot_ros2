@@ -30,7 +30,8 @@ setup(
             'pump = src.pump_controller:main',
             'picamera = src.picamera_controller:main',
             'object_detector = src.object_detector:main',
-            'vid_streamer = src.vid_streamer:main'
+            'vid_streamer = src.vid_streamer:main',
+            'start_stop_wrapper = src.start_stop_wrapper:main'
         ],
     },
 )

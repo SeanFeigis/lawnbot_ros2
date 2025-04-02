@@ -77,6 +77,11 @@ def generate_launch_description():
         executable='vid_streamer',
         name='vid_streamer'
     )
+    start_stop = launch_ros.actions.Node(
+        package='lawnbot_ros2',
+        executable='start_stop_wrapper',
+        name='start_stop_wrapper'
+    )
 
     # Handle Ctrl+C (SIGINT) for graceful shutdown
     handle_sigint = RegisterEventHandler(
@@ -94,5 +99,6 @@ def generate_launch_description():
         pump_controller,
         main_logic_controller,
         vid_streamer,
+        start_stop,
         handle_sigint
     ])

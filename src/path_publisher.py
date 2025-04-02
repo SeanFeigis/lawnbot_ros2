@@ -4,7 +4,7 @@ from rclpy.node import Node
 
 from std_msgs.msg import String
 from std_msgs.msg import Bool
-from std_srvs.srv import Trigger
+from std_srvs.srv import Trigger, Empty
 from custom_message.msg import MotorData
 
 
@@ -16,8 +16,6 @@ motor_data_array = [
         MotorData(op_code='D', position=2500, speed=600),
         MotorData(op_code='T', position=1800, speed=500)
     ]
-
-iterator = cycle(motor_data_array)
 
 class PathPublisher(Node):
 
@@ -31,6 +29,8 @@ class PathPublisher(Node):
             self.set_action_completed,
             10)
         
+        self.iterator = cycle(motor_data_array)
+        
         self.get_completed_subscription  # Prevent unused variable warning
         self.action_completed = False #Does not give first instruction until response from motor controller
         
@@ -40,7 +40,10 @@ class PathPublisher(Node):
             
         self.check_model_status()
         
-        self.timer = self.create_timer(PATH_TIMER_PERIOD, self.timer_callback)
+        self.start_service = self.create_service(Empty, 'path_start', self.start_path_callback)
+        self.start_service = self.create_service(Empty, 'path_stop', self.stop_path_callback)
+        
+        self.timer = self.create_timer(PATH_TIMER_PERIOD, self.timer_callback, autostart=False)
         
         
     def check_model_status(self):
@@ -57,7 +60,7 @@ class PathPublisher(Node):
         if not self.action_completed:
             return
         
-        msg = next(iterator)
+        msg = next(self.iterator)
         self.publisher_.publish(msg)
         self.get_logger().info('Publishing: "%s"' % str(msg))
         
@@ -67,6 +70,18 @@ class PathPublisher(Node):
             self.get_logger().debug('Action Completed')
         else:
             self.get_logger().debug('Action Incomplete')
+            
+            
+    def stop_path_callback(self, request, response):
+        self.timer.cancel()
+        response = Empty.Response()
+        return response
+        
+    def start_path_callback(self,request, response):
+        self.iterator = cycle(motor_data_array)
+        self.timer.reset()
+        response = Empty.Response()
+        return response
         
 def main(args=None):
     rclpy.init(args=args)
