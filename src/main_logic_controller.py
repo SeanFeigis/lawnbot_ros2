@@ -4,7 +4,7 @@ import time
 from rclpy.node import Node
 
 from std_msgs.msg import String
-from std_srvs.srv import Trigger
+from std_srvs.srv import Trigger, Empty
 from custom_message.msg import MotorData, BoundingBox
 
 Y_MIDPOINT =  500
@@ -28,7 +28,14 @@ class MainLogicController(Node):
             self.dandelion_detected_callback,
             10)
         
-        self.current_path = None
+        
+        
+        self.current_path = MotorData(op_code='D', position=0, speed=0)
+        
+        self.start_service = self.create_service(Empty, 'pump_start', self.start_pump_callback)
+        self.start_service = self.create_service(Empty, 'pump_stop', self.stop_pump_callback)
+        self.run_pump = False
+        
         
         ### Pump Client
         self.pump_client = self.create_client(Trigger, 'pump_trigger_service')
@@ -105,7 +112,22 @@ class MainLogicController(Node):
         if (Y_MIDPOINT - Y_RANGE) <= y_midpoint <= (Y_MIDPOINT + Y_RANGE):
             self.get_logger().info(f'Dandelion is within range at: {y_midpoint}')
             # Trigger the pump
-            self.send_pump_request()
+            self.get_logger().info(f'{self.current_path.op_code}  {self.run_pump}')
+            if 'D' in self.current_path.op_code and self.run_pump:
+                self.send_pump_request()
+                
+    def start_pump_callback(self,request, response):
+        self.run_pump = True
+        
+        response = Empty.Response()
+        return response
+        
+    def stop_pump_callback(self,request, response):
+        self.run_pump = False
+        
+        response = Empty.Response()
+        return response
+        
         
 
 def main(args=None):

@@ -8,12 +8,12 @@ from std_srvs.srv import Trigger, Empty
 from custom_message.msg import MotorData
 
 
-PATH_TIMER_PERIOD = 1.0 # Seconds
+PATH_TIMER_PERIOD = 1 # Seconds
 
 motor_data_array = [
-        MotorData(op_code='D', position=6000, speed=600),
-        MotorData(op_code='T', position=1800, speed=500),
-        MotorData(op_code='D', position=2500, speed=600),
+        MotorData(op_code='D', position=10000, speed=600),
+        MotorData(op_code='T', position=1850, speed=500),
+        MotorData(op_code='D', position=2200, speed=600),
         MotorData(op_code='T', position=1800, speed=500)
     ]
 

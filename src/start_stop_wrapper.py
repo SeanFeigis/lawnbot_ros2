@@ -14,6 +14,8 @@ class WrapperNode(Node):
         self.motor_stop = self.create_client(Empty, 'motor_stop')
         self.path_start = self.create_client(Empty, 'path_start')
         self.path_stop = self.create_client(Empty, 'path_stop')
+        self.pump_start = self.create_client(Empty, 'pump_start')
+        self.pump_stop = self.create_client(Empty, 'pump_stop')
 
     def wrapper_callback(self, request, response):
         """Handles start/stop requests and calls the respective services."""
@@ -22,15 +24,15 @@ class WrapperNode(Node):
         self.get_logger().info(f"Received request: {action} services.")
 
         if command:
-            self.trigger_service(self.motor_start, self.path_start)
+            self.trigger_service(self.motor_start, self.path_start, self.pump_start)
         else:
-            self.trigger_service(self.motor_stop, self.path_stop)
+            self.trigger_service(self.motor_stop, self.path_stop, self.pump_stop)
 
         response.success = True
         response.message = f"Sent {action} command."
         return response
 
-    def trigger_service(self, client_1, client_2):
+    def trigger_service(self, client_1, client_2, client_3):
         """Helper function to call an Empty service."""
         if not client_1.wait_for_service(timeout_sec=1.0):
             pass
@@ -40,6 +42,10 @@ class WrapperNode(Node):
             pass
         else:
             client_2.call_async(Empty.Request())
+        if not client_3.wait_for_service(timeout_sec=1.0):
+            pass
+        else:
+            client_3.call_async(Empty.Request())
             
 def main(args=None):
     rclpy.init(args=args)
